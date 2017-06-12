@@ -155,10 +155,3 @@ Key files:
 There are many other source files.  Each has a suscinct header comment that
 describes its purpose and role within the larger system.
 
-
-## Contacts
-
-The main SQLite webpage is [http://www.sqlite.org/](http://www.sqlite.org/)
-with geographically distributed backup servers at
-[http://www2.sqlite.org/](http://www2.sqlite.org) and
-[http://www3.sqlite.org/](http://www3.sqlite.org).
