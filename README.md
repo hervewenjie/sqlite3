@@ -1,62 +1,12 @@
-<h1 align="center">SQLite Source Repository</h1>
+<h1 align="center">SQLite源码</h1>
 
-This repository contains the complete source code for the SQLite database
-engine.  Some test scripts are also include.  However, many other test scripts
-and most of the documentation are managed separately.
+https://www.sqlite.org/src/doc/trunk/README.md
 
-If you are reading this on a Git mirror someplace, you are doing it wrong.
-The [official repository](https://www.sqlite.org/src/) is better.  Go there
-now.
+## 获取源码
 
-## Obtaining The Code
+## 编译
 
-SQLite sources are managed using the
-[Fossil](https://www.fossil-scm.org/), a distributed version control system
-that was specifically designed to support SQLite development.
-If you do not want to use Fossil, you can download tarballs or ZIP
-archives as follows:
-
-  *  Lastest trunk check-in:
-     <https://www.sqlite.org/src/tarball/sqlite.tar.gz> or
-     <https://www.sqlite.org/src/zip/sqlite.zip>.
-
-  *  Latest release:
-     <https://www.sqlite.org/src/tarball/sqlite.tar.gz?r=release> or
-     <https://www.sqlite.org/src/zip/sqlite.zip?r=release>.
-
-  *  For other check-ins, substitute an appropriate branch name or
-     tag or hash prefix for "release" in the URLs of the previous
-     bullet.  Or browse the [timeline](https://www.sqlite.org/src/timeline)
-     to locate the check-in desired, click on its information page link,
-     then click on the "Tarball" or "ZIP Archive" links on the information
-     page.
-
-If you do want to use Fossil to check out the source tree, 
-first install Fossil version 2.0 or later.
-(Source tarballs and precompiled binaries available
-[here](https://www.fossil-scm.org/fossil/uv/download.html).)
-Then run commands like this:
-
-        mkdir ~/sqlite
-        cd ~/sqlite
-        fossil clone https://www.sqlite.org/src sqlite.fossil
-        fossil open sqlite.fossil
-    
-After setting up a repository using the steps above, you can always
-update to the lastest version using:
-
-        fossil update trunk   ;# latest trunk check-in
-        fossil update release ;# latest official release
-
-Or type "fossil ui" to get a web-based user interface.
-
-## Compiling
-
-First create a directory in which to place
-the build products.  It is recommended, but not required, that the
-build directory be separate from the source directory.  Cd into the
-build directory and then from the build directory run the configure
-script found at the root of the source tree.  Then run "make".
+推荐的方法是首先新建文件夹来存放build文件。Cd进入bld，然后运行configure命令和make命令。
 
 For example:
 
@@ -69,40 +19,6 @@ For example:
         make test                ;#  Run some tests (requires Tcl)
 
 See the makefile for additional targets.
-
-The configure script uses autoconf 2.61 and libtool.  If the configure
-script does not work out for you, there is a generic makefile named
-"Makefile.linux-gcc" in the top directory of the source tree that you
-can copy and edit to suit your needs.  Comments on the generic makefile
-show what changes are needed.
-
-## Using MSVC
-
-On Windows, all applicable build products can be compiled with MSVC.
-First open the command prompt window associated with the desired compiler
-version (e.g. "Developer Command Prompt for VS2013").  Next, use NMAKE
-with the provided "Makefile.msc" to build one of the supported targets.
-
-For example:
-
-        mkdir bld
-        cd bld
-        nmake /f Makefile.msc TOP=..\sqlite
-        nmake /f Makefile.msc sqlite3.c TOP=..\sqlite
-        nmake /f Makefile.msc sqlite3.dll TOP=..\sqlite
-        nmake /f Makefile.msc sqlite3.exe TOP=..\sqlite
-        nmake /f Makefile.msc test TOP=..\sqlite
-
-There are several build options that can be set via the NMAKE command
-line.  For example, to build for WinRT, simply add "FOR_WINRT=1" argument
-to the "sqlite3.dll" command line above.  When debugging into the SQLite
-code, adding the "DEBUG=1" argument to one of the above command lines is
-recommended.
-
-SQLite does not require [Tcl](http://www.tcl.tk/) to run, but a Tcl installation
-is required by the makefiles (including those for MSVC).  SQLite contains
-a lot of generated code and Tcl is used to do much of that code generation.
-The makefiles also require AWK.
 
 ## Source Code Tour
 
