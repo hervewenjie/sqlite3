@@ -20,21 +20,9 @@ For example:
 
 See the makefile for additional targets.
 
-## Source Code Tour
+## 源码漫游
 
-Most of the core source files are in the **src/** subdirectory.  But
-src/ also contains files used to build the "testfixture" test harness;
-those file all begin with "test".  And src/ contains the "shell.c" file
-which is the main program for the "sqlite3.exe" command-line shell and
-the "tclsqlite.c" file which implements the bindings to SQLite from the
-Tcl programming language.  (Historical note:  SQLite began as a Tcl
-extension and only later escaped to the wild as an independent library.)
-
-Test scripts and programs are found in the **test/** subdirectory.
-There are other test suites for SQLite (see
-[How SQLite Is Tested](http://www.sqlite.org/testing.html))
-but those other test suites are
-in separate source repositories.
+大部分源代码在/src文件夹下。/src包含"shell.c"文件作为命令行的入口文件。
 
 The **ext/** subdirectory contains code for extensions.  The
 Full-text search engine is in **ext/fts3**.  The R-Tree engine is in
@@ -117,18 +105,6 @@ named **sqlite3-1.c**, **sqlite3-2.c**, ..., **sqlite3-5.c**.  In this way,
 all of the source code is contained within a single translation unit so
 that the compiler can do extra cross-procedure optimization, but no
 individual source file exceeds 32K lines in length.
-
-## How It All Fits Together
-
-SQLite is modular in design.
-See the [architectural description](http://www.sqlite.org/arch.html)
-for details. Other documents that are useful in
-(helping to understand how SQLite works include the
-[file format](http://www.sqlite.org/fileformat2.html) description,
-the [virtual machine](http://www.sqlite.org/vdbe.html) that runs
-prepared statements, the description of
-[how transactions work](http://www.sqlite.org/atomiccommit.html), and
-the [overview of the query planner](http://www.sqlite.org/optoverview.html).
 
 Unfortunately, years of effort have gone into optimizating SQLite, both
 for small size and high performance.  And optimizations tend to result in
