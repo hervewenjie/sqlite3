@@ -2198,6 +2198,7 @@ int sqlite3BtreeOpen(
   int flags,              /* Options */
   int vfsFlags            /* Flags passed through to sqlite3_vfs.xOpen() */
 ){
+  printf("%s\n", "sqlite3BtreeOpen 打开一个数据库文件");
   BtShared *pBt = 0;             /* Shared part of btree structure */
   Btree *p;                      /* Handle to return */
   sqlite3_mutex *mutexOpen = 0;  /* Prevents a race condition. Ticket #3537 */
@@ -2562,6 +2563,7 @@ static void freeTempSpace(BtShared *pBt){
 ** Close an open database and invalidate all cursors.
 */
 int sqlite3BtreeClose(Btree *p){
+  printf("%s\n", "sqlite3BtreeClose 关闭数据库");
   BtShared *pBt = p->pBt;
   BtCursor *pCur;
 
@@ -3205,10 +3207,15 @@ int sqlite3BtreeNewDb(Btree *p){
 ** when A already has a read lock, we encourage A to give up and let B
 ** proceed.
 */
+// 第二个参数非0则是写事务, 否则读事务
+// 如果涉及到修改数据库, 必须先开启写事务
+// 
 int sqlite3BtreeBeginTrans(Btree *p, int wrflag){
+  if(wrflag==0){printf("%s\n", "sqlite3BtreeBeginTrans 开启读事务");} else{printf("%s\n", "sqlite3BtreeBeginTrans 开启写事务");}
   BtShared *pBt = p->pBt;
   int rc = SQLITE_OK;
 
+  // 进入Btree, 验证完整性
   sqlite3BtreeEnter(p);
   btreeIntegrity(p);
 
@@ -3216,17 +3223,20 @@ int sqlite3BtreeBeginTrans(Btree *p, int wrflag){
   ** is already in a read-transaction and a read-transaction
   ** is requested, this is a no-op.
   */
+  // 如果已经在写事务中 或者 要求读事务已经读事务, 不操作
   if( p->inTrans==TRANS_WRITE || (p->inTrans==TRANS_READ && !wrflag) ){
     goto trans_begun;
   }
   assert( pBt->inTransaction==TRANS_WRITE || IfNotOmitAV(pBt->bDoTruncate)==0 );
 
   /* Write transactions are not possible on a read-only database */
+  // 数据库是只读的不能开启
   if( (pBt->btsFlags & BTS_READ_ONLY)!=0 && wrflag ){
     rc = SQLITE_READONLY;
     goto trans_begun;
   }
 
+// 共享, 返回已锁定
 #ifndef SQLITE_OMIT_SHARED_CACHE
   {
     sqlite3 *pBlock = 0;
@@ -3271,12 +3281,16 @@ int sqlite3BtreeBeginTrans(Btree *p, int wrflag){
     ** file is not pBt->pageSize. In this case lockBtree() will update
     ** pBt->pageSize to the page-size of the file on disk.
     */
+    // 如果数据库对应的btree的第一个页面还没有读进内存
+    // 把页面读进内存, 页面加read_lock
     while( pBt->pPage1==0 && SQLITE_OK==(rc = lockBtree(pBt)) );
 
     if( rc==SQLITE_OK && wrflag ){
+      // 只读
       if( (pBt->btsFlags & BTS_READ_ONLY)!=0 ){
         rc = SQLITE_READONLY;
       }else{
+        // 获取数据库的写锁并打开日志文件
         rc = sqlite3PagerBegin(pBt->pPager,wrflag>1,sqlite3TempInMemory(p->db));
         if( rc==SQLITE_OK ){
           rc = newDatabase(pBt);
@@ -3284,6 +3298,7 @@ int sqlite3BtreeBeginTrans(Btree *p, int wrflag){
       }
     }
   
+  // unlock
     if( rc!=SQLITE_OK ){
       unlockBtreeIfUnused(pBt);
     }
@@ -3292,6 +3307,7 @@ int sqlite3BtreeBeginTrans(Btree *p, int wrflag){
 
   if( rc==SQLITE_OK ){
     if( p->inTrans==TRANS_NONE ){
+      // btree事务数加1
       pBt->nTransaction++;
 #ifndef SQLITE_OMIT_SHARED_CACHE
       if( p->sharable ){
@@ -3302,6 +3318,7 @@ int sqlite3BtreeBeginTrans(Btree *p, int wrflag){
       }
 #endif
     }
+    // 设置btree事务状态
     p->inTrans = (wrflag?TRANS_WRITE:TRANS_READ);
     if( p->inTrans>pBt->inTransaction ){
       pBt->inTransaction = p->inTrans;
@@ -3340,6 +3357,7 @@ trans_begun:
     rc = sqlite3PagerOpenSavepoint(pBt->pPager, p->db->nSavepoint);
   }
 
+  // 离开Btree, 验证完整性
   btreeIntegrity(p);
   sqlite3BtreeLeave(p);
   return rc;
@@ -3916,6 +3934,7 @@ int sqlite3BtreeCommitPhaseTwo(Btree *p, int bCleanup){
 ** Do both phases of a commit.
 */
 int sqlite3BtreeCommit(Btree *p){
+  printf("%s\n", "sqlite3BtreeCommit 提交事务");
   int rc;
   sqlite3BtreeEnter(p);
   rc = sqlite3BtreeCommitPhaseOne(p, 0);
@@ -3996,6 +4015,7 @@ int sqlite3BtreeTripAllCursors(Btree *pBtree, int errCode, int writeOnly){
 ** are no active cursors, it also releases the read lock.
 */
 int sqlite3BtreeRollback(Btree *p, int tripCode, int writeOnly){
+  printf("%s\n", "sqlite3BtreeRollback 回滚");
   int rc;
   BtShared *pBt = p->pBt;
   MemPage *pPage1;
@@ -4065,6 +4085,7 @@ int sqlite3BtreeRollback(Btree *p, int tripCode, int writeOnly){
 ** using the sqlite3BtreeSavepoint() function.
 */
 int sqlite3BtreeBeginStmt(Btree *p, int iStatement){
+  printf("%s\n", "sqlite3BtreeBeginStmt 开始语句");
   int rc;
   BtShared *pBt = p->pBt;
   sqlite3BtreeEnter(p);

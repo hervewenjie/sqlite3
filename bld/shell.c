@@ -7132,7 +7132,7 @@ int SQLITE_CDECL main(int argc, char **argv){
 int SQLITE_CDECL wmain(int argc, wchar_t **wargv){
   char **argv;
 #endif
-  printf("%s\n", "从这里开始......");
+  printf("%s\n", "不用Xcode了自己手动编译吧......");
   char *zErrMsg = 0;
   ShellState data;
   const char *zInitFile = 0;
@@ -7336,7 +7336,7 @@ int SQLITE_CDECL wmain(int argc, wchar_t **wargv){
     if( z[0]!='-' ) continue;
     if( z[1]=='-' ){ z++; }
     if( strcmp(z,"-init")==0 ){
-      i++;
+        i++;
     }else if( strcmp(z,"-html")==0 ){
       data.mode = MODE_Html;
     }else if( strcmp(z,"-list")==0 ){

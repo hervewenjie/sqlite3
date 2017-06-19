@@ -556,7 +556,7 @@ static Mem *out2Prerelease(Vdbe *p, VdbeOp *pOp){
 ** This is the core of sqlite3_step().  
 */
 int sqlite3VdbeExec(
-  Vdbe *p                    /* The VDBE */
+  Vdbe *p                    /* 当前VDBE*/ /* The VDBE */
 ){
   Op *aOp = p->aOp;          /* Copy of p->aOp */
   Op *pOp = aOp;             /* Current operation */
@@ -566,10 +566,10 @@ int sqlite3VdbeExec(
 #ifdef SQLITE_DEBUG
   int nExtraDelete = 0;      /* Verifies FORDELETE and AUXDELETE flags */
 #endif
-  int rc = SQLITE_OK;        /* Value to return */
-  sqlite3 *db = p->db;       /* The database */
+  int rc = SQLITE_OK;        /* 返回值 */ /* Value to return */
+  sqlite3 *db = p->db;       /* 当前数据库 */ /* The database */
   u8 resetSchemaOnFault = 0; /* Reset schema after an error if positive */
-  u8 encoding = ENC(db);     /* The database encoding */
+  u8 encoding = ENC(db);     /* 数据库编码 *//* The database encoding */
   int iCompare = 0;          /* Result of last comparison */
   unsigned nVmStep = 0;      /* Number of virtual machine steps */
 #ifndef SQLITE_OMIT_PROGRESS_CALLBACK
@@ -3187,7 +3187,7 @@ case OP_AutoCommit: {
 ** If P2 is non-zero, then a write-transaction is started, or if a 
 ** read-transaction is already active, it is upgraded to a write-transaction.
 ** If P2 is zero, then a read-transaction is started.
-**
+** P2不为0, 开始写事务 P2为0, 开始读事务
 ** P1 is the index of the database file on which the transaction is
 ** started.  Index 0 is the main database file and index 1 is the
 ** file used for temporary tables.  Indices of 2 or more are used for
@@ -3214,6 +3214,9 @@ case OP_AutoCommit: {
 ** halts.  The sqlite3_step() wrapper function might then reprepare the
 ** statement and rerun it from the beginning.
 */
+// 事务指令的实现
+// P1为数据库文件唯一索引号, 0为main database
+// P2不为0, 一个写事务开始
 case OP_Transaction: {
   Btree *pBt;
   int iMeta;
@@ -3227,12 +3230,15 @@ case OP_Transaction: {
     rc = SQLITE_READONLY;
     goto abort_due_to_error;
   }
+  // 指向数据库对应的btree
   pBt = db->aDb[pOp->p1].pBt;
 
   if( pBt ){
+    // 从这里开始事务, 主要给文件加锁, 并设置Btree事务状态
     rc = sqlite3BtreeBeginTrans(pBt, pOp->p2);
     testcase( rc==SQLITE_BUSY_SNAPSHOT );
     testcase( rc==SQLITE_BUSY_RECOVERY );
+    // 错误处理
     if( rc!=SQLITE_OK ){
       if( (rc&0xff)==SQLITE_BUSY ){
         p->pc = (int)(pOp - aOp);
@@ -3242,6 +3248,8 @@ case OP_Transaction: {
       goto abort_due_to_error;
     }
 
+    // 如果是写事务并且usesStmtJournal是true
+    // 开始statement transaction
     if( pOp->p2 && p->usesStmtJournal 
      && (db->autoCommit==0 || db->nVdbeRead>1) 
     ){
@@ -3269,12 +3277,15 @@ case OP_Transaction: {
     ** version is checked to ensure that the schema has not changed since the
     ** SQL statement was prepared.
     */
+    // 获取meta
     sqlite3BtreeGetMeta(pBt, BTREE_SCHEMA_VERSION, (u32 *)&iMeta);
     iGen = db->aDb[pOp->p1].pSchema->iGeneration;
   }else{
+    // 没有btree
     iGen = iMeta = 0;
   }
   assert( pOp->p5==0 || pOp->p4type==P4_INT32 );
+  // 数据库schema改变
   if( pOp->p5 && (iMeta!=pOp->p3 || iGen!=pOp->p4.i) ){
     sqlite3DbFree(db, p->zErrMsg);
     p->zErrMsg = sqlite3DbStrDup(db, "database schema has changed");
@@ -3297,6 +3308,7 @@ case OP_Transaction: {
     p->expired = 1;
     rc = SQLITE_SCHEMA;
   }
+  // 错误
   if( rc ) goto abort_due_to_error;
   break;
 }
